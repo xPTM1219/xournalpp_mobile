@@ -89,7 +89,7 @@ class _XppLayerStackState extends State<XppLayerStack> {
   Map<XppContent, Widget> renderedContent = {};
   @override
   Widget build(BuildContext context) {
-    List<Widget?> children = [];
+    List<Widget> children = [];
     widget.layer!.content!.forEach((element) {
       if (element == null) return;
       if (!renderedContent.keys.contains(element)) {
@@ -99,10 +99,10 @@ class _XppLayerStackState extends State<XppLayerStack> {
           left: element.getOffset()?.dx ?? 0,
         );
       }
-      children.add(renderedContent[element]);
+      children.add(renderedContent[element]!);
     });
     return Stack(
-      children: children as List<Widget>,
+      children: children,
     );
   }
 }

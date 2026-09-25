@@ -1,7 +1,8 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:xournalpp/generated/l10n.dart';
-import 'dart:io' show Platform;
 import 'package:xournalpp/widgets/ToolBoxBottomSheet.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:xournalpp/widgets/ToolSettingDialog.dart';
@@ -76,7 +77,7 @@ class EditingToolBarState extends State<EditingToolBar> {
     );
   }
 
-  InkWell getInkwellButton(EditingTool tool, IconData icon, {bool enableSettings = false, bool usePrimaryColor = false}) {
+  InkWell getInkwellButton(EditingTool tool, Object icon, {bool enableSettings = false, bool usePrimaryColor = false}) {
     return InkWell(
       onLongPress: () {},
       child: FloatingActionButton(
@@ -90,7 +91,7 @@ class EditingToolBarState extends State<EditingToolBar> {
             saveDeviceTable();
           }
         },
-        child: FaIcon(icon),
+        child: icon is FaIconData ? FaIcon(icon) : Icon(icon as IconData),
         elevation: 6,
         backgroundColor:
         getTool() == tool ? (!usePrimaryColor ? widget.getColor!() : null) : Theme.of(context).cardColor,
@@ -106,7 +107,7 @@ class EditingToolBarState extends State<EditingToolBar> {
 
   void setTool(EditingTool tool){
     PointerDeviceKind? device = currentDevice;
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       device = PointerDeviceKind.stylus;
     }
     widget.deviceMap![device] = tool;
@@ -114,7 +115,7 @@ class EditingToolBarState extends State<EditingToolBar> {
 
   EditingTool? getTool() {
     PointerDeviceKind? device = currentDevice;
-    if (Platform.isAndroid || Platform.isIOS) {
+    if (!kIsWeb && (Platform.isAndroid || Platform.isIOS)) {
       device = PointerDeviceKind.stylus;
     }
     return widget.deviceMap![device];

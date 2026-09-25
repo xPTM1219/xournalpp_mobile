@@ -344,7 +344,7 @@ class _CanvasPageState extends State<CanvasPage> with TickerProviderStateMixin {
         onPressed: () {
           showModalBottomSheet(
               elevation: 16,
-              backgroundColor: Theme.of(context).backgroundColor,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(16),
@@ -580,15 +580,19 @@ class _CanvasPageState extends State<CanvasPage> with TickerProviderStateMixin {
 
   void rememberToolSettings(){
     SharedPreferences.getInstance().then((prefs) {
-      prefs.setInt(PreferencesKeys.kToolColor, toolColor.value);
+      prefs.setInt(PreferencesKeys.kToolColor, toolColor.toARGB32());
       prefs.setDouble(PreferencesKeys.kToolWidth, toolWidth);
     });
   }
 
   void loadToolSettings(){
     SharedPreferences.getInstance().then((prefs) {
-      toolColor = Color(prefs.getInt(PreferencesKeys.kToolColor)!);
-      toolWidth = prefs.getDouble(PreferencesKeys.kToolWidth)!;
+      final savedColor = prefs.getInt(PreferencesKeys.kToolColor);
+      final savedWidth = prefs.getDouble(PreferencesKeys.kToolWidth);
+      setState(() {
+        if (savedColor != null) toolColor = Color(savedColor);
+        if (savedWidth != null) toolWidth = savedWidth;
+      });
     });
   }
 }

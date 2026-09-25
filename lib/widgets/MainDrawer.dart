@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:package_info/package_info.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:xournalpp/generated/l10n.dart';
 import 'package:xournalpp/pages/CanvasPage.dart';
@@ -40,10 +40,10 @@ class _MainDrawerState extends State<MainDrawer> {
                   child: UserAccountsDrawerHeader(
                     accountName: Text(
                       'Xournal++',
-                      style: Theme.of(context).textTheme.headline1,
+                      style: Theme.of(context).textTheme.displayLarge,
                     ),
                     accountEmail: Text(S.of(context).mobileEditionUnofficial,
-                        style: Theme.of(context).textTheme.headline6),
+                        style: Theme.of(context).textTheme.titleLarge),
                     currentAccountPicture: Image.asset('assets/xournalpp.png'),
                   ),
                 ),
@@ -94,16 +94,16 @@ class _MainDrawerState extends State<MainDrawer> {
                                 !(Theme.of(context).platform ==
                                     TargetPlatform.macOS))
                               ElevatedButton.icon(
-                                  onPressed: () =>
-                                      launch('https://buymeacoff.ee/braid'),
+                                  onPressed: () => launchUrl(
+                                      Uri.parse('https://buymeacoff.ee/braid')),
                                   icon: Icon(Icons.emoji_food_beverage),
                                   label: Text('Buy me a cup of tea')),
                             OutlinedButton(
-                                onPressed: () => launch(Uri.encodeFull(
+                                onPressed: () => launchUrl(Uri.parse(
                                     'https://github.com/xournalpp/xournalpp')),
                                 child: Text(S.of(context).aboutXournal)),
                             OutlinedButton(
-                                onPressed: () => launch(Uri.encodeFull(
+                                onPressed: () => launchUrl(Uri.parse(
                                     'https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile')),
                                 child: Text(S.of(context).sourceCode))
                           ],

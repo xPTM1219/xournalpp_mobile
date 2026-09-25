@@ -7,7 +7,7 @@
     "theme_color": "#673ab7",
     "description": "A port of the main features of Xournal++ to various Flutter platforms like Android, iOS and the Web.",
     "orientation": "any",
-    "prefer_related_applications": true,
+    "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/Icon-192.png",
