@@ -8,6 +8,14 @@ A port of the main features of Xournal++ to various Flutter platforms like Andro
 
 ![Feature banner](https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile/-/raw/master/assets/feature-banner.svg)
 
+## Updated repo
+
+This repo picks up the work from the possible abandoned repo in Gitlab and now
+archived Github repo with the objective of updating it and fixing existing
+issues. I have no plans for the moment of testing the iOS app since I don't own
+any Apple device. I will be testing in Linux, Android, Web and Windows.
+Of course, any help is welcome.
+
 ## Try it out
 
 ***Mission completed:** We can now render strokes, images and text and LaTeX!. We thereby support the full `.xopp` file format.* :tada:
@@ -134,12 +142,16 @@ The dark color is Material Blue Grey 900.
 
 ## Misc
 
-*Like this project? [Buy me a Coffee](https://buymeacoff.ee/braid).*
+To be updated: ~~*Like this project? [Buy me a Coffee](https://buymeacoff.ee/braid).*~~
 
-This software is powered by the education software [TestApp](https://testapp.schule) — **Learning. Easily.**
+~~This software is powered by the education software [TestApp](https://testapp.schule) — **Learning. Easily.**~~
 
-[![TestApp banner](https://gitlab.com/testapp-system/testapp-flutter/-/raw/mobile/assets/Google%20Play%20EN.png)](https://testapp.schule)
+~~[![TestApp banner](https://gitlab.com/testapp-system/testapp-flutter/-/raw/mobile/assets/Google%20Play%20EN.png)](https://testapp.schule)~~
 
 ## Legal notes
 
 This project is licensed under the terms and conditions of the EUPL-1.2 found in [LICENSE](LICENSE).
+
+## Resources
+
+* [Original project in Gitlab](https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile)
