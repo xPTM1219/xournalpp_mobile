@@ -30,7 +30,7 @@ class _DropFileState extends State<DropFile> {
               children: [
                 Builder(
                   builder: (context) => DropzoneView(
-                    onDrop: (file) {
+                    onDropFile: (file) {
                       setState(() {
                         _fileHover = false;
                         _loadingDropZone = true;
@@ -118,7 +118,7 @@ class _DropFileState extends State<DropFile> {
                                 actions: [
                                   TextButton(
                                     onPressed: () => Clipboard.setData(
-                                        ClipboardData(text: message)),
+                                        ClipboardData(text: message ?? '')),
                                     child: Text(S.of(context).copyErrorMessage),
                                   ),
                                   TextButton(
@@ -129,7 +129,7 @@ class _DropFileState extends State<DropFile> {
                                 content: Text(
                                     S.of(context).theFollowingErrorWasDetected +
                                         '\n' +
-                                        message!),
+                                        (message ?? '')),
                               ));
                     },
                     onCreated: (controller) {
@@ -161,8 +161,8 @@ class _DropFileState extends State<DropFile> {
             ),
             decoration: BoxDecoration(
               color: _fileHover
-                  ? Theme.of(context).accentColor
-                  : Theme.of(context).backgroundColor,
+                  ? Theme.of(context).colorScheme.secondary
+                  : Theme.of(context).colorScheme.surface,
               border: _fileHover
                   ? Border.all(color: Theme.of(context).primaryColor, width: 2)
                   : Border.all(color: Colors.transparent, width: 2),

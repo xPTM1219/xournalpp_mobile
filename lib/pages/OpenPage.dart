@@ -1,15 +1,12 @@
 import 'dart:convert';
-import 'dart:ui';
 
 import 'package:after_layout/after_layout.dart';
 import 'package:file_picker_cross/file_picker_cross.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:transparent_image/transparent_image.dart';
 import 'package:xournalpp/generated/l10n.dart';
 import 'package:xournalpp/main.dart';
 import 'package:xournalpp/pages/CanvasPage.dart';
@@ -50,8 +47,8 @@ class _OpenPageState extends State<OpenPage>
     // trying to load fitting locale
 
     try {
-      if (['en', 'de', 'pt'].contains(window.locale.languageCode))
-        S.load(Locale(window.locale.languageCode));
+      if (['en', 'de', 'pt'].contains(View.of(context).platformDispatcher.locale.languageCode))
+        S.load(Locale(View.of(context).platformDispatcher.locale.languageCode));
 
       /// TODO: implement custom change of language
       // checking for locale override
@@ -97,9 +94,12 @@ class _OpenPageState extends State<OpenPage>
 
   @override
   void afterFirstLayout(BuildContext context) {
+    // Share intents are only wired on mobile platforms; the plugin has no
+    // web implementation and desktop builds register no receiver.
+    if (kIsWeb) return;
     try {
       // For sharing images coming from outside the app while the app is in the memory
-      ReceiveSharingIntent.getMediaStream().listen(
+      ReceiveSharingIntent.instance.getMediaStream().listen(
           (List<SharedMediaFile> value) {
         setState(() {
           _sharedFiles = value;
@@ -110,24 +110,13 @@ class _OpenPageState extends State<OpenPage>
       });
 
       // For sharing images coming from outside the app while the app is closed
-      ReceiveSharingIntent.getInitialMedia()
+      ReceiveSharingIntent.instance
+          .getInitialMedia()
           .then((List<SharedMediaFile> value) {
         setState(() {
           _sharedFiles = value;
           receivedShareNotification(value);
         });
-      }).catchError((e) {});
-
-      // For sharing or opening urls/text coming from outside the app while the app is in the memory
-      ReceiveSharingIntent.getTextStream().listen((String value) {
-        receivedShareNotification(value);
-      }, onError: (err) {
-        print("getLinkStream error: $err");
-      });
-
-      // For sharing or opening urls/text coming from outside the app while the app is closed
-      ReceiveSharingIntent.getInitialText().then((String? value) {
-        receivedShareNotification(value);
       }).catchError((e) {});
     } catch (e) {}
   }
@@ -205,7 +194,7 @@ class _OpenPageState extends State<OpenPage>
           ListTile(
             title: Text(
               S.of(context).recentFiles,
-              style: Theme.of(context).textTheme.headline3,
+              style: Theme.of(context).textTheme.displaySmall,
             ),
           )
         ]..addAll(_loadedRecent
@@ -246,7 +235,7 @@ class _OpenPageState extends State<OpenPage>
         print(data);
         data = [
           SharedMediaFile(
-              data, base64Encode(kTransparentImage), null, SharedMediaType.FILE)
+              path: data, type: SharedMediaType.file)
         ];
         _sharedFiles = data as List<SharedMediaFile>;
       }
@@ -340,8 +329,8 @@ class _OpenPageState extends State<OpenPage>
           ),
           subtitle: Text(
             fileInfo['name'],
-            style: Theme.of(context).textTheme.headline3!.copyWith(
-                color: Theme.of(context).textTheme.bodyText1!.color,
+            style: Theme.of(context).textTheme.displaySmall!.copyWith(
+                color: Theme.of(context).textTheme.bodyLarge!.color,
                 fontSize: kEmphasisFontSize * kFontSizeDivision),
           ),
           trailing: Tooltip(
