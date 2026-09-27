@@ -1,0 +1,107 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_call:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-apk:
+    name: Build release APK
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter build apk --release
+
+      - name: Rename APK
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{ print $2 }' | cut -f1 -d "+")
+          cp build/app/outputs/flutter-apk/app-release.apk \
+            "xournalpp-mobile-${VERSION}.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: xournalpp-mobile-*.apk
+          if-no-files-found: error
+
+  build-deb:
+    name: Build deb package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev dpkg-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - name: Fill debian changelog
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{ print $2 }' | cut -f1 -d "+")
+          sed -i "s/DATE/$(date -R)/g" debian/changelog
+          sed -i "s/VERSION/${VERSION}/g" debian/changelog
+
+      - run: flutter config --enable-linux-desktop
+      - run: flutter pub get
+      - name: Build with dpkg-buildpackage
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Rename deb
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | awk '{ print $2 }' | cut -f1 -d "+")
+          mv ../xournalpp-mobile_${VERSION}_amd64.deb \
+            "xournalpp-mobile-${VERSION}.deb"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: xournalpp-mobile-*.deb
+          if-no-files-found: error
+
+  release:
+    name: Attach artifacts to GitHub release
+    needs: [build-apk, build-deb]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release
+
+      # The AppImage artifact is added in phase 5; wire it into needs then.
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release/xournalpp-mobile-*.apk
+            release/xournalpp-mobile-*.deb
