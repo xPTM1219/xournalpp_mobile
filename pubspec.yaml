@@ -46,6 +46,12 @@ dependency_overrides:
   file_picker: ^8.0.0
   win32: ^5.5.3
   file: ^7.0.1
+  # share_plus_linux 3.x (pulled by file_picker_cross via share_plus 4.x) is a
+  # Dart-only plugin but declares `pluginClass: none`, which the Linux/Windows
+  # generators treat as a native class, breaking `flutter build linux/windows`
+  # on a missing native folder. share_plus 7.x merges the desktop
+  # implementations into the core package as Dart-only plugins.
+  share_plus: ^7.0.0
   # Local fork of file_picker_cross 4.6.0. The upstream package predates Dart 3
   # and uses the removed NullThrownError; the fork fixes the 3 throw sites.
   file_picker_cross:
