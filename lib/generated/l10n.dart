@@ -114,9 +114,9 @@ class S {
     );
   }
 
-  /// `Open`
+  /// `Open XOPP`
   String get open {
-    return Intl.message('Open', name: 'open', desc: '', args: []);
+    return Intl.message('Open XOPP', name: 'open', desc: '', args: []);
   }
 
   /// `New`

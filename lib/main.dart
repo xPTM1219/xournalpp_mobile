@@ -56,22 +56,23 @@ const TextStyle kBodyFont = TextStyle(
     fontFamily: 'Open Sans',
     fontWeight: FontWeight.w300,
     height: 1.4,
-    fontSize: kBodyFontSize);
+    fontSize: kBodyFontSize,
+    color: kLightColor);
 const TextStyle kEmphasisFont = TextStyle(
     fontFamily: 'Glacial Indifference',
     fontSize: kEmphasisFontSize,
     height: 1.22,
-    letterSpacing: 1.8);
+    letterSpacing: 1.8,
+    color: kLightColor);
 
 final kTextTheme = TextTheme(
   displayLarge: kHugeFont,
   displayMedium: kHugeFont,
-  displaySmall: kLargeFont
-      .copyWith(color: kDarkColor)
-      .copyWith(fontSize: kLargeFontSize * kFontSizeDivision),
-  headlineMedium: kLargeFont.copyWith(color: kDarkColor),
-  headlineSmall: kLargeFont.copyWith(color: kDarkColor),
-  titleLarge: kLargeFont.copyWith(color: kDarkColor),
+  displaySmall:
+      kLargeFont.copyWith(fontSize: kLargeFontSize * kFontSizeDivision),
+  headlineMedium: kLargeFont,
+  headlineSmall: kLargeFont,
+  titleLarge: kLargeFont,
   bodyLarge: kBodyFont,
   bodyMedium: kEmphasisFont,
   bodySmall: kEmphasisFont,
@@ -86,19 +87,20 @@ final kColorScheme = ColorScheme(
   surface: kDarkColor!,
   error: Colors.deepOrange,
   onPrimary: kLightColor,
-  onSecondary: kDarkColor!,
-  onSurface: kDarkColor!,
+  onSecondary: kLightColor,
+  onSurface: kLightColor,
   onError: kLightColor,
   brightness: Brightness.dark,
 );
 
-final kDialogTheme =
-    DialogThemeData(titleTextStyle: kLargeFont.copyWith(color: kLightColor));
+final kDialogTheme = DialogThemeData(
+    titleTextStyle: kLargeFont.copyWith(color: kLightColor),
+    contentTextStyle: kBodyFont.copyWith(color: kLightColor));
 
 final kSnackBarTheme = SnackBarThemeData(
     backgroundColor: kDarkColor,
     actionTextColor: kSecondaryColorAccent,
-    contentTextStyle: kBodyFont);
+    contentTextStyle: kBodyFont.copyWith(color: kLightColor));
 
 class XournalppMobile extends StatelessWidget {
   // This widget is the root of your application.
@@ -119,6 +121,7 @@ class XournalppMobile extends StatelessWidget {
           primarySwatch: kPrimaryColor as MaterialColor?,
           fontFamily: 'Open Sans',
           textTheme: kTextTheme,
+          iconTheme: const IconThemeData(color: kLightColor),
           colorScheme: kColorScheme.copyWith(brightness: Brightness.light),
           visualDensity: VisualDensity.adaptivePlatformDensity,
           dialogTheme: kDialogTheme,
@@ -127,6 +130,7 @@ class XournalppMobile extends StatelessWidget {
           primarySwatch: kPrimaryColor as MaterialColor?,
           fontFamily: 'Open Sans',
           textTheme: kTextTheme,
+          iconTheme: const IconThemeData(color: kLightColor),
           colorScheme: kColorScheme,
           visualDensity: VisualDensity.adaptivePlatformDensity,
           dialogTheme: kDialogTheme,

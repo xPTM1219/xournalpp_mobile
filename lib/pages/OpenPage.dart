@@ -11,6 +11,7 @@ import 'package:xournalpp/generated/l10n.dart';
 import 'package:xournalpp/main.dart';
 import 'package:xournalpp/pages/CanvasPage.dart';
 import 'package:xournalpp/src/XppFile.dart';
+import 'package:xournalpp/src/file_service.dart';
 import 'package:xournalpp/src/conditional/open_file/open_file_generic.dart'
     if (dart.library.html) 'package:xournalpp/src/conditional/open_file/open_file_web.dart'
     if (dart.library.io) 'package:xournalpp/src/conditional/open_file/open_file_io.dart';
@@ -182,12 +183,36 @@ class _OpenPageState extends State<OpenPage>
           ListTile(
             leading: Icon(Icons.picture_as_pdf),
             onTap: () async {
-              final _file = await XppFile.importPdf(
-                  pdf: await FilePickerCross.importFromStorage(
-                      type: FileTypeCross.custom,
-                      fileExtension: 'pdf')); // TODO `.pdf`
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (c) => CanvasPage(file: _file)));
+              final snackBarController = ScaffoldMessenger.of(context)
+                  .showSnackBar(SnackBar(
+                      duration: Duration(days: 999),
+                      content: Text(S.of(context).loadingFile)));
+              try {
+                final _file = await XppFile.importPdf(
+                    pdf: await FilePickerCross.importFromStorage(
+                        type: FileTypeCross.custom,
+                        fileExtension: 'pdf')); // TODO `.pdf`
+                snackBarController.close();
+                Navigator.of(context).push(
+                    MaterialPageRoute(builder: (c) => CanvasPage(file: _file)));
+              } on FileSelectionCanceledError {
+                snackBarController.close();
+              } catch (e) {
+                snackBarController.close();
+                showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: Text(S.of(context).errorOpeningFile),
+                          content: Text(S.of(context)
+                                  .imVerySorryButICouldntReadTheFile +
+                              'pdf\n${e.toString()}'),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: Text(S.of(context).close))
+                          ],
+                        ));
+              }
             },
             title: Text(S.of(context).importPdf),
           ),
@@ -341,12 +366,30 @@ class _OpenPageState extends State<OpenPage>
           ),
           onLongPress: () => showDeleteDialog(fileInfo['path']),
           onTap: () async {
-            XppFile file = await XppFile.fromFilePickerCross(
-                await FilePickerCross.fromInternalPath(path: fileInfo['path']),
-                (percent) {},
-                showMissingFileDialog);
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => CanvasPage(file: file)));
+            try {
+              XppFile file = await XppFile.fromFilePickerCross(
+                  await FileService.pickInternal(fileInfo['path']),
+                  (percent) {},
+                  showMissingFileDialog);
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => CanvasPage(
+                        file: file,
+                        filePath: fileInfo['path'],
+                      )));
+            } catch (e) {
+              showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        title: Text(S.of(context).errorOpeningFile),
+                        content: Text(S.of(context).imVerySorryButICouldntReadTheFile +
+                            fileInfo['path']),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.of(context).pop(),
+                              child: Text(S.of(context).close))
+                        ],
+                      ));
+            }
           },
         );
       } else {
