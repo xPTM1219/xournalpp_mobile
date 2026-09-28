@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:archive/archive.dart';
 import 'package:file_picker_cross/file_picker_cross.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:transparent_image/transparent_image.dart';
 import 'package:xml/xml.dart';
 import 'package:xournalpp/generated/l10n.dart';
@@ -17,6 +18,7 @@ import 'package:xournalpp/pages/OpenPage.dart';
 import 'package:xournalpp/src/HexColor.dart';
 import 'package:xournalpp/src/PdfImage.dart';
 import 'package:xournalpp/src/XppBackground.dart';
+import 'package:xournalpp/src/file_service.dart';
 
 import 'XppLayer.dart';
 import 'XppPage.dart';
@@ -41,9 +43,8 @@ class XppFile {
       file.pages!.add(XppPage.empty()
         ..pageSize = size
         ..background = XppBackgroundPdf(
-            onUnavailable: ((String p) =>
-                    throw ("$p is not available even though just imported"))
-                as Future<FilePickerCross> Function(String?),
+            onUnavailable: (String? p) => throw ("$p is not available"
+                " even though just imported"),
             page: i,
             filename: pdf.path));
     }
@@ -66,14 +67,24 @@ class XppFile {
           builder: (context) => CanvasPage(
                 file: file,
               )));
+    } on FileSelectionCanceledException {
+      // The user dismissed the open dialog; return silently.
+      snackBarController.close();
     } catch (e) {
       snackBarController.close();
       showDialog(
           context: context,
           builder: (c) => AlertDialog(
-                title: Text(S.of(context).noFileSelected),
-                content: Text(S.of(context).youDidNotSelectAnyFile),
+                title: Text(S.of(context).errorOpeningFile),
+                content: SelectableText(S
+                        .of(context)
+                        .imVerySorryButICouldntReadTheFile +
+                    '\n${e.toString()}'),
                 actions: [
+                  TextButton(
+                      onPressed: () => Clipboard.setData(
+                          ClipboardData(text: e.toString())),
+                      child: Text(S.of(context).copyErrorMessage)),
                   TextButton(
                       onPressed: () => Navigator.of(context).pop(),
                       child: Text(S.of(context).close))
@@ -86,8 +97,8 @@ class XppFile {
   static Future<XppFile> open(Function(double) percentageCallback,
       FileNotAvailableCallback onUnavailable) async {
     /// showing a [FilePickerCross]
-    FilePickerCross rawFile = await FilePickerCross.importFromStorage(
-        type: FileTypeCross.custom, fileExtension: 'xopp');
+    FilePickerCross? rawFile = await FileService.pickXopp();
+    if (rawFile == null) throw FileSelectionCanceledException();
 
     /// decoding by [fromFilePickerCross]
     XppFile file =

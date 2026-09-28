@@ -3,6 +3,33 @@
 Deferred work recorded during phase 1 (toolchain modernization). The items
 here are known breakages or follow-ups that later phases will pick up.
 
+## Phase 3 deferred items (file_picker_cross removal)
+
+- [ ] Full `file_picker_cross` removal. Phase 3 moved only the flaky save and
+      open paths to `file_picker` + `path_provider`
+      (`lib/src/file_service.dart`). Remaining call sites:
+      - Recent files list: `OpenPage.dart` still uses
+        `FilePickerCross.fromInternalPath` for taps and
+        `FilePickerCross.delete` for removal; those paths only reach the
+        internal fake filesystem written by the vendored package.
+      - Background lookups: `XppBackground.dart` resolves pixmap/pdf
+        backgrounds through `FilePickerCross.fromInternalPath` (including
+        `fromInternalPath` in `XppBackground.dart` and the pdf import path in
+        `XppFile.importPdf`).
+      - Share-intent open path: `OpenPage.receivedShareNotification` decodes
+        via `openFileByUri` (`lib/src/conditional/open_file/*.dart`), which
+        wraps bytes in `FilePickerCross`.
+      - Web-only leftovers: `CanvasPage.shareScreenshot` and the web branch of
+        `FileService.exportXoppAs` still use `FilePickerCross.exportToStorage`
+        (web download). Phase 7 replaces the web save/open with IndexedDB.
+      - `XppFile.toFilePickerCross` helper is now unused; delete it during the
+        removal.
+- [ ] After removal, drop the vendored copy at
+      `third_party/file_picker_cross` (plus the vendored `disk_space` fork if
+      nothing else needs it) and the `file_picker`, `package_info_plus`,
+      `win32`, `file`, and `share_plus` `dependency_overrides` from
+      `pubspec.yaml`.
+
 ## Toolchain (phase 1 deferred items)
 
 - [ ] `file_picker_cross` is vendored at `third_party/file_picker_cross`

@@ -49,6 +49,12 @@ Of course, any help is welcome.
 - [x] Basic editing
 - [x] Basic PDF rendering
 
+## Requirements
+
+### Linux
+
+- Debian based `apt install cmake ninja-build clang libgtk-3-dev`
+
 ## Known issues
 
 - **Immense memory consumption**: *If you open immense files, you get immense memory consumption. That's logic. Usually, Xournal++ Mobile takes twice the file size plus around 50MB for itself.*

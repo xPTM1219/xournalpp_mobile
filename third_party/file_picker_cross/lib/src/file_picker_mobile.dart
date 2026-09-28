@@ -17,9 +17,18 @@ Future<Map<String, Uint8List>> selectFilesMobile({
       type: fileTypeCrossParse(type),
       allowedExtensions: parseExtension(fileExtension));
 
-  final p = filePickerResults?.files.single.path;
+  if (filePickerResults == null || filePickerResults.files.isEmpty) {
+    // The user dismissed the picker dialog.
+    throw FileSelectionCanceledError();
+  }
 
-  File file = File(p!);
+  final p = filePickerResults.files.single.path;
+
+  if (p == null) {
+    throw FileSelectionCanceledError('Picked file has no path.');
+  }
+
+  File file = File(p);
 
   return {file.path: await file.readAsBytes()};
 }

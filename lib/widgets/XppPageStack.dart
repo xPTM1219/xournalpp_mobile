@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -61,10 +60,12 @@ class XppPageStackState extends State<XppPageStack>
     RenderRepaintBoundary boundary =
         pngKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
     ui.Image image = await boundary.toImage();
-    ByteData byteData = await (image.toByteData(format: ui.ImageByteFormat.png)
-        as FutureOr<ByteData>);
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    return pngBytes;
+    final ByteData? byteData =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) {
+      throw StateError('Could not encode the page as PNG.');
+    }
+    return byteData.buffer.asUint8List();
   }
 
   @override

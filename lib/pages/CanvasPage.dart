@@ -14,6 +14,7 @@ import 'package:vector_math/vector_math_64.dart' show Vector4;
 import 'package:xournalpp/generated/l10n.dart';
 import 'package:xournalpp/src/XppFile.dart';
 import 'package:xournalpp/src/XppPage.dart';
+import 'package:xournalpp/src/file_service.dart';
 import 'package:xournalpp/src/globals.dart';
 import 'package:xournalpp/widgets/EditingToolbar.dart';
 import 'package:xournalpp/widgets/MainDrawer.dart';
@@ -472,63 +473,61 @@ class _CanvasPageState extends State<CanvasPage> with TickerProviderStateMixin {
         content: Text(S.of(context).successfullyShared + ' ' + fileName)));
   }
 
-  void saveFile({bool export = false}) async {
-    setState(() {
-      savingFile = true;
-    });
-    ScaffoldFeatureController snackBarController =
+  Future<void> saveFile({bool export = false}) async {
+    final ScaffoldFeatureController snackBarController =
         ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(S.of(context).savingFile),
         duration: Duration(days: 999),
       ),
     );
-    //try {
-    if (_file!.title == null) await _showTitleDialog();
-    String path = _file!.title! + '.xopp';
-    _file!.previewImage = kIsWeb
-        ? kTransparentImage
-        : await pageListViewKey.currentState!.getPng(0);
-    FilePickerCross file = _file!.toFilePickerCross(filePath: path);
-    if (export)
-      file.exportToStorage();
-    else
-      file.saveToPath(path: path);
-
-    /// starting async task to save recent files list
-    SharedPreferences.getInstance().then((prefs) {
-      String jsonData = prefs.getString(PreferencesKeys.kRecentFiles) ?? '[]';
-      Set files = (jsonDecode(jsonData) as Iterable).toSet();
-      files.removeWhere((element) => element['path'] == path);
-      files.add({
-        'preview': base64Encode(_file!.previewImage!),
-        'name': _file!.title,
-        'path': path
-      });
-      jsonData = jsonEncode(files.toList());
-      prefs.setString(PreferencesKeys.kRecentFiles, jsonData);
-    });
-    snackBarController.close();
     setState(() {
-      savingFile = false;
+      savingFile = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(S.of(context).successfullySaved),
-      ),
-    );
-    /*} catch (e) {
-      snackBarController.close();
-      setState(() {
-        savingFile = false;
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      if (_file!.title == null) await _showTitleDialog();
+      _file!.previewImage = kIsWeb
+          ? kTransparentImage
+          : await pageListViewKey.currentState!.getPng(0);
+      final String savedPath = export
+          ? (await FileService.exportXoppAs(_file!)) ?? ''
+          : await FileService.saveXopp(_file!, existingPath: widget.filePath);
+
+      /// starting async task to save recent files list
+      SharedPreferences.getInstance().then((prefs) {
+        String jsonData = prefs.getString(PreferencesKeys.kRecentFiles) ?? '[]';
+        Set files = (jsonDecode(jsonData) as Iterable).toSet();
+        files.removeWhere((element) => element['path'] == savedPath);
+        files.add({
+          'preview': base64Encode(_file!.previewImage!),
+          'name': _file!.title,
+          'path': savedPath
+        });
+        jsonData = jsonEncode(files.toList());
+        prefs.setString(PreferencesKeys.kRecentFiles, jsonData);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
+      snackBarController.close();
+      messenger.showSnackBar(
         SnackBar(
-          content:
-              Text(S.of(context).unfortunatelyThereWasAnErrorSavingThisFile),
+          content: Text(S.of(context).successfullySaved),
         ),
       );
-    }*/
+    } catch (e) {
+      snackBarController.close();
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(S.of(context).unfortunatelyThereWasAnErrorSavingThisFile +
+              '\n$e'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          savingFile = false;
+        });
+      }
+    }
   }
 
   void _onAnimationReset() {

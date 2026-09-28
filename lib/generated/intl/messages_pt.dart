@@ -102,7 +102,7 @@ class MessageLookup extends MessageLookupByLibrary {
       "Não está funcionando ainda.",
     ),
     "okay": MessageLookupByLibrary.simpleMessage("Okay"),
-    "open": MessageLookupByLibrary.simpleMessage("Abrir"),
+    "open": MessageLookupByLibrary.simpleMessage("Abrir XOPP"),
     "opening": MessageLookupByLibrary.simpleMessage("Abrindo"),
     "openingFile": MessageLookupByLibrary.simpleMessage("Abrindo arquivo"),
     "pageBackground": MessageLookupByLibrary.simpleMessage(
