@@ -1,0 +1,26 @@
+name: disk_space
+description: A tiny Flutter Plugin to show free and total disk space.
+version: 0.2.1
+repository: https://github.com/mboeddeker/disk_space
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=3.3.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# The following section is specific to Flutter.
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: de.appgewaltig.disk_space
+        pluginClass: DiskSpacePlugin
+      ios:
+        pluginClass: SwiftDiskSpacePlugin
