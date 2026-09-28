@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "online.xournal.mobile"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -23,7 +23,7 @@ android {
         applicationId = "online.xournal.mobile"
         // minSdk 23 keeps the historical floor of this app; Flutter 3.35 requires 24+,
         // so devices below 24 fall back to the web build.
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -3,7 +3,7 @@ description: A port of the main features of Xournal++ to various Flutter platfor
 
 publish_to: none
 
-version: 1.1.11+27
+version: 1.1.12
 
 environment:
   sdk: ^3.9.0
@@ -56,6 +56,10 @@ dependency_overrides:
   # and uses the removed NullThrownError; the fork fixes the 3 throw sites.
   file_picker_cross:
     path: third_party/file_picker_cross
+  # Local fork of disk_space 0.2.1 (2021). Upstream lacks the AGP 8 `namespace`
+  # declaration and pulls dead jcenter() repos, breaking Gradle configuration.
+  disk_space:
+    path: third_party/disk_space
 
 flutter_icons:
    android: true
