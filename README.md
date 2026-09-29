@@ -57,8 +57,12 @@ Of course, any help is welcome.
 
 ## Known issues
 
-- **Immense memory consumption**: *If you open immense files, you get immense memory consumption. That's logic. Usually, Xournal++ Mobile takes twice the file size plus around 50MB for itself.*
-- But **why** does it take twice the memory?: *No idea. ¯\\\_(ツ)_/¯*
+- **Memory on huge files**: *Memory use stays proportional to the pages you
+  view, not the total page count: PDF pages are rasterized one page at a
+  time and kept in a small LRU cache (~8 pages) instead of rasterizing the
+  whole document per page. Opening immense files still buffers the full
+  document in memory; a streaming parser with lazy page loading would fix
+  that — see [TODO.md](TODO.md).*
 
 ## Getting started
 

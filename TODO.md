@@ -3,6 +3,14 @@
 Deferred work recorded during phase 1 (toolchain modernization). The items
 here are known breakages or follow-ups that later phases will pick up.
 
+## Phase 4 deferred items (PDF memory)
+
+- [ ] Streaming XML parse + lazy page loading for constant-memory open of
+      huge `.xopp` files. The parser in `XppFile.fromFilePickerCross` still
+      buffers the whole decompressed XML text and the full document tree;
+      a streaming parse (`XmlEventIterator`) with on-demand page loading
+      would make open memory constant per page.
+
 ## Phase 3 deferred items (file_picker_cross removal)
 
 - [ ] Full `file_picker_cross` removal. Phase 3 moved only the flaky save and

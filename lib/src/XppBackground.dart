@@ -101,21 +101,72 @@ class PDfBackgroundWidget extends StatefulWidget {
 
 class _PDfBackgroundWidgetState extends State<PDfBackgroundWidget>
     with AutomaticKeepAliveClientMixin {
+  /// Decode-size cap in device pixels so huge PDF pages never enter the
+  /// image cache at full raster resolution (96 dpi A4 is already ~794x1123).
+  static const int _maxDecodeDimension = 2048;
+
+  late Future<Uint8List> _imageFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _imageFuture = _loadImage();
+  }
+
+  @override
+  void didUpdateWidget(covariant PDfBackgroundWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.provider?.filename != widget.provider?.filename ||
+        oldWidget.provider?.page != widget.provider?.page) {
+      _imageFuture = _loadImage();
+    }
+  }
+
+  Future<Uint8List> _loadImage() {
+    return FilePickerCross.fromInternalPath(path: widget.provider!.filename!)
+        .then((value) {
+      return pdfImage(value, widget.provider!.page);
+    }).catchError((e) => widget.provider!
+                .onUnavailable(widget.provider!.filename)
+                .then((value) => pdfImage(value, widget.provider!.page)));
+  }
+
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final MediaQueryData mediaQuery = MediaQuery.of(context);
     return FutureBuilder(
-        future:
-            FilePickerCross.fromInternalPath(path: widget.provider!.filename!)
-                .then((value) {
-          return pdfImage(value, widget.provider!.page);
-        }).catchError((e) => widget.provider!
-                    .onUnavailable(widget.provider!.filename)
-                    .then((value) => pdfImage(value, widget.provider!.page))),
+        future: _imageFuture,
         builder: (context, AsyncSnapshot<Uint8List> snapshot) =>
             (snapshot.hasData)
-                ? Image.memory(snapshot.data!)
+                ? Image(
+                    image: ResizeImage(
+                      MemoryImage(snapshot.data!),
+                      width: _decodeWidth(mediaQuery),
+                      height: _decodeHeight(mediaQuery),
+                      policy: ResizeImagePolicy.fit,
+                    ),
+                    fit: BoxFit.fill,
+                  )
                 : Center(child: CircularProgressIndicator()));
+  }
+
+  /// Decode width scaled to the device pixel ratio, clamped so the
+  /// longest side never exceeds [_maxDecodeDimension] device pixels.
+  int? _decodeWidth(MediaQueryData mediaQuery) {
+    final int width = (mediaQuery.size.width * mediaQuery.devicePixelRatio)
+        .round()
+        .clamp(1, _maxDecodeDimension);
+    return width;
+  }
+
+  /// Decode height scaled to the device pixel ratio, clamped so the
+  /// longest side never exceeds [_maxDecodeDimension] device pixels.
+  int? _decodeHeight(MediaQueryData mediaQuery) {
+    final int height = (mediaQuery.size.height * mediaQuery.devicePixelRatio)
+        .round()
+        .clamp(1, _maxDecodeDimension);
+    return height;
   }
 
   @override

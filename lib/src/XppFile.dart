@@ -34,12 +34,27 @@ class XppFile {
   }
 
   /// creates an [XppFile] from a PDF document opened in a [FilePickerCross]
-  static Future<XppFile> importPdf({required FilePickerCross pdf}) async {
-    final pageCount = await pdfPageCount(pdf);
-    pdf.saveToPath(path: pdf.path!);
+  ///
+  /// [pageCountOf] and [sizesOf] default to the real PDF raster helpers;
+  /// tests inject fakes so no plugin runs.
+  static Future<XppFile> importPdf({required FilePickerCross pdf,
+      Future<int> Function(FilePickerCross)? pageCountOf,
+      Future<Map<int, XppPageSize>> Function(FilePickerCross, int)? sizesOf,
+      void Function(String path)? persistPdf}) async {
+    final Future<int> Function(FilePickerCross) count =
+        pageCountOf ?? pdfPageCount;
+    final Future<Map<int, XppPageSize>> Function(FilePickerCross, int) sizes =
+        sizesOf ?? pdfPageSizes;
+    final void Function(String path) persist = persistPdf ?? ((path) {
+      pdf.saveToPath(path: path);
+    });
+
+    final pageCount = await count(pdf);
+    persist(pdf.path!);
     XppFile file = XppFile.empty(title: pdf.fileName)..pages!.clear();
+    final pageSizes = await sizes(pdf, pageCount);
     for (int i = 0; i < pageCount; i++) {
-      final size = await pdfPageSize(pdf, i);
+      final size = pageSizes[i]!;
       file.pages!.add(XppPage.empty()
         ..pageSize = size
         ..background = XppBackgroundPdf(
@@ -127,24 +142,29 @@ class XppFile {
 
     /// decoding the [Uint8List] to a [String]
     String fileText = utf8.decode(bytes);
-    //Clipboard.setData(ClipboardData(text: fileText));
+    // The decoded byte list is dead after the utf8 decode; drop it before
+    // parsing so only one full-size representation stays alive.
+    bytes = const [];
 
-    /// parsing the [String] to a [XmlDocument]
-    XmlElement documentTree =
+    /// parsing the [String] to an [XmlElement] tree rooted at 'xournal'
+    XmlElement document =
         XmlDocument.parse(fileText).findElements('xournal').toList()[0];
+    // The raw XML text is dead once the document tree is built; drop it
+    // before the (much larger) parsed content is materialized.
+    fileText = '';
 
     /// decoding the preview image from base64 [String] to [Uint8List] of bytes
     Uint8List previewImage;
     try {
       previewImage = base64Decode(
-          documentTree.findElements('preview').toList()[0].innerText);
+          document.findElements('preview').toList()[0].innerText);
     } catch (e) {
       previewImage = kTransparentImage;
     }
 
     List<XppPage> pages = [];
     int pageIndex = 0;
-    Iterable<XmlElement> pageElements = documentTree.findElements('page');
+    Iterable<XmlElement> pageElements = document.findElements('page');
     pageElements.forEach((XmlElement pageElement) {
       pageIndex++;
       XppPageSize pageSize = XppPageSize(
@@ -226,7 +246,7 @@ class XppFile {
         /// processing all images first
         layer.findElements('image').forEach((imageElement) {
           content[int.parse(imageElement.getAttribute('counter')!)] = XppImage(
-              data: base64Decode(imageElement.text.trim()),
+              base64Data: imageElement.text.trim(),
               topLeft: Offset(double.parse(imageElement.getAttribute('left')!),
                   double.parse(imageElement.getAttribute('top')!)),
               bottomRight: Offset(
