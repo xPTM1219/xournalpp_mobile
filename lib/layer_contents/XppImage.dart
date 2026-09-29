@@ -14,10 +14,24 @@ class XppImage extends XppContent {
   Offset? topLeft = Offset(0, 0);
   Offset? bottomRight = Offset(0, 0);
 
-  @required
-  final Uint8List? data;
+  /// Raw image bytes, decoded on first access when [base64Data] was given.
+  Uint8List? _data;
 
-  XppImage({this.data, this.topLeft, this.bottomRight});
+  /// Base64 payload kept undecoded until the image is used, so pages with
+  /// many images do not hold every decoded copy at once.
+  String? base64Data;
+
+  @required
+  Uint8List? get data {
+    if (_data == null && base64Data != null) {
+      _data = base64Decode(base64Data!);
+      base64Data = null;
+    }
+    return _data;
+  }
+
+  XppImage({Uint8List? data, this.base64Data, this.topLeft, this.bottomRight})
+      : _data = data;
 
   static Future<XppImage> open({required Offset topLeft}) async {
     FilePickerCross image =
