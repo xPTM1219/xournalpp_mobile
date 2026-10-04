@@ -3,6 +3,22 @@
 Deferred work recorded during phase 1 (toolchain modernization). The items
 here are known breakages or follow-ups that later phases will pick up.
 
+## Phase 5 deferred items (AppImage)
+
+- [ ] The appimage-builder distro matrix tests stay disabled (`--skip-tests`
+      needs Docker-in-Docker). `scripts/test-appimage.sh` does a 15s launch
+      smoke test instead; a full matrix run is possible later with the
+      appimage-builder test environments.
+- [ ] The Docker image is rebuilt on every CI run because the runner has no
+      layer cache. Cache it in GHCR or with `actions/cache` to save several
+      minutes per run.
+- [ ] Only x86_64 is built. An aarch64 AppImage needs the arm64 Flutter
+      artifacts, an arm64 `apt.arch`, and an arm64 build host or emulation.
+- [ ] The AppImage relies on the host X11/Wayland client libraries (the
+      default appimage-builder exclude list drops them). If a target host
+      lacks them, add `libx11-6` and the xcb/wayland packages to the recipe
+      `apt.include` list.
+
 ## Phase 4 deferred items (PDF memory)
 
 - [ ] Streaming XML parse + lazy page loading for constant-memory open of

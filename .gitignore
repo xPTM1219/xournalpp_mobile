@@ -59,8 +59,12 @@ debian/xournalpp-mobile
 
 # Exceptions to above rules.
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
-*.snap
 .gradle
 
 # Flutter ephemeral state
 **/Flutter/ephemeral/
+
+# AppImage build artifacts (appimage-builder)
+/AppDir/
+/appimage-build/
+/*.AppImage

@@ -1,0 +1,68 @@
+# appimage-builder recipe. Documentation: https://appimage-builder.readthedocs.io
+# Run through scripts/build-appimage.sh (Docker) or after `flutter build
+# linux --release` with the APP_VERSION environment variable set. The tests
+# need Docker-in-Docker, so builds call the tool with --skip-tests.
+version: 1
+
+script:
+  # Prepare the AppDir from the Flutter Linux release bundle. The Flutter
+  # bundle keeps its own flat layout: binary, lib/ and data/ side by side,
+  # so they stay siblings in the AppDir root.
+  - rm -rf AppDir || true
+  - cp -r build/linux/x64/release/bundle AppDir
+  # Desktop entry: reuse the one shipped by the deb package, with AppRun
+  # as Exec, as the AppImage spec expects.
+  - mkdir -p AppDir/usr/share/applications
+  - sed 's/^Exec=.*/Exec=AppRun/' linux/xournalpp-mobile.desktop > AppDir/usr/share/applications/online.xournal.mobile.desktop
+  # Icons: same files as the deb package installs, plus the 1024px source
+  # icon for the AppDir root (.DirIcon points at the biggest match).
+  - mkdir -p AppDir/usr/share/pixmaps AppDir/usr/share/icons/hicolor/192x192/apps AppDir/usr/share/icons/hicolor/1024x1024/apps
+  - cp assets/xournalpp-mobile.png AppDir/usr/share/pixmaps/
+  - cp assets/xournalpp-mobile.png AppDir/usr/share/icons/hicolor/192x192/apps/
+  - cp assets/xournalpp.png AppDir/usr/share/icons/hicolor/1024x1024/apps/xournalpp-mobile.png
+
+AppDir:
+  path: AppDir
+  app_info:
+    id: online.xournal.mobile
+    name: Xournal++ Mobile
+    icon: xournalpp-mobile
+    # {{ APP_VERSION }} is read from the environment, see
+    # scripts/build-appimage-inner.sh.
+    version: "{{ APP_VERSION }}"
+    exec: xournalpp-mobile
+    exec_args: $@
+  apt:
+    arch: amd64
+    allow_unauthenticated: true
+    sources:
+      - sourceline: "deb [arch=amd64] https://deb.debian.org/debian/ bookworm main"
+      - sourceline: "deb [arch=amd64] https://deb.debian.org/debian/ bookworm-updates main"
+      - sourceline: "deb [arch=amd64] https://deb.debian.org/debian-security/ bookworm-security main"
+    include:
+      # GTK3 runtime and its stack. The icon themes and the mime database are
+      # hard dependencies of libgtk-3-0 on bookworm, but the builder marks
+      # them as excluded by default, so they must be required here.
+      - libgtk-3-0
+      - adwaita-icon-theme
+      - hicolor-icon-theme
+      - shared-mime-info
+  files:
+    exclude:
+      - usr/share/man
+      - usr/share/doc
+      - usr/share/lintian
+  runtime:
+    # AppRun v2.0.0 is the newest version supported by appimage-builder
+    # 1.1.0 (the version installed in the build container).
+    version: "v2.0.0"
+    env:
+      # Start through XWayland: the app crashes under the Wayland backend
+      # (the old snap needed DISABLE_WAYLAND=1, see README known issues).
+      GDK_BACKEND: x11
+
+AppImage:
+  arch: x86_64
+  # {{ APP_VERSION }} is read from the environment, see
+  # scripts/build-appimage-inner.sh.
+  file_name: "xournalpp-mobile-{{ APP_VERSION }}-x86_64.AppImage"
