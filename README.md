@@ -30,7 +30,7 @@ Of course, any help is welcome.
   - [Build for Windows](https://github.com/xPTM1219/xournalpp_mobile/releases)
 - Linux
   - [Download for Debian](https://github.com/xPTM1219/xournalpp_mobile/releases)
-  - [Download for generic Linux](https://github.com/xPTM1219/xournalpp_mobile/releases)
+  - [Download AppImage](https://github.com/xPTM1219/xournalpp_mobile/releases) (any distribution)
 
 ### Visible parts already working
 
@@ -54,6 +54,8 @@ Of course, any help is welcome.
 ### Linux
 
 - Debian based `apt install cmake ninja-build clang libgtk-3-dev`
+- AppImage packaging: [Docker](https://docs.docker.com/engine/install/), the
+  rest of the toolchain lives in the build container
 
 ## Known issues
 
@@ -63,6 +65,10 @@ Of course, any help is welcome.
   whole document per page. Opening immense files still buffers the full
   document in memory; a streaming parser with lazy page loading would fix
   that — see [TODO.md](TODO.md).*
+- **Wayland**: *The AppImage starts through XWayland: the recipe sets
+  `GDK_BACKEND=x11` (the old snap needed `DISABLE_WAYLAND=1` for the same
+  problem). If you want to try native Wayland, start it with
+  `GDK_BACKEND=wayland`.*
 
 ## Getting started
 
@@ -109,6 +115,24 @@ flutter config --enable-linux-desktop # or --enable-macos-desktop or --enable-wi
 flutter run -d linux # or macos or windows
 ```
 
+### Build the AppImage
+
+The AppImage build runs in a Docker container, so no Linux build toolchain is
+needed on the host. The container holds a pinned Flutter SDK and
+[appimage-builder](https://appimage-builder.readthedocs.io).
+
+```shell
+scripts/build-appimage.sh   # builds xournalpp-mobile-<version>-x86_64.AppImage
+scripts/test-appimage.sh    # smoke test: launches the AppImage on a virtual display
+```
+
+Downloaded AppImages run the same way:
+
+```shell
+chmod +x xournalpp-mobile-*-x86_64.AppImage
+./xournalpp-mobile-*-x86_64.AppImage
+```
+
 ## Colors and Typography
 
 ### Colors
@@ -152,6 +176,6 @@ This project is licensed under the terms and conditions of the EUPL-1.2 found in
 
 ## CI
 
-Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build and release APK on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, deb) and attaches them to a GitHub release via `.github/workflows/release.yml`.
+Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build, release APK and the AppImage (Docker build with a launch smoke test) on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, deb, AppImage) and attaches them to a GitHub release via `.github/workflows/release.yml`.
 
 No repository secrets are required. APK signing falls back to the debug key when `key.properties` is absent.

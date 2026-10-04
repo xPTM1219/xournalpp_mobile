@@ -86,9 +86,26 @@ jobs:
           path: xournalpp-mobile-*.deb
           if-no-files-found: error
 
+  build-appimage:
+    name: Build AppImage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The build runs in Docker (pinned Ubuntu 22.04 toolchain), so the
+      # artifact matches the local build. See scripts/build-appimage.sh.
+      - run: scripts/build-appimage.sh
+      - run: scripts/test-appimage.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage
+          path: xournalpp-mobile-*-x86_64.AppImage
+          if-no-files-found: error
+
   release:
     name: Attach artifacts to GitHub release
-    needs: [build-apk, build-deb]
+    needs: [build-apk, build-deb, build-appimage]
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
@@ -99,9 +116,9 @@ jobs:
           merge-multiple: true
           path: release
 
-      # The AppImage artifact is added in phase 5; wire it into needs then.
       - uses: softprops/action-gh-release@v2
         with:
           files: |
             release/xournalpp-mobile-*.apk
             release/xournalpp-mobile-*.deb
+            release/xournalpp-mobile-*-x86_64.AppImage
