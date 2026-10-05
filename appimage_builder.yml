@@ -10,12 +10,13 @@ script:
   # so they stay siblings in the AppDir root.
   - rm -rf AppDir || true
   - cp -r build/linux/x64/release/bundle AppDir
-  # Desktop entry: reuse the one shipped by the deb package, with AppRun
+  # Desktop entry: reuse the one shipped in linux/, with AppRun
   # as Exec, as the AppImage spec expects.
   - mkdir -p AppDir/usr/share/applications
   - sed 's/^Exec=.*/Exec=AppRun/' linux/xournalpp-mobile.desktop > AppDir/usr/share/applications/online.xournal.mobile.desktop
-  # Icons: same files as the deb package installs, plus the 1024px source
-  # icon for the AppDir root (.DirIcon points at the biggest match).
+  # Icons: install the app icon into the pixmaps and the hicolor
+  # directories, plus the 1024px source icon for the AppDir root
+  # (.DirIcon points at the biggest match).
   - mkdir -p AppDir/usr/share/pixmaps AppDir/usr/share/icons/hicolor/192x192/apps AppDir/usr/share/icons/hicolor/1024x1024/apps
   - cp assets/xournalpp-mobile.png AppDir/usr/share/pixmaps/
   - cp assets/xournalpp-mobile.png AppDir/usr/share/icons/hicolor/192x192/apps/
