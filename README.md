@@ -29,7 +29,6 @@ Of course, any help is welcome.
 - Windows
   - [Build for Windows](https://github.com/xPTM1219/xournalpp_mobile/releases)
 - Linux
-  - [Download for Debian](https://github.com/xPTM1219/xournalpp_mobile/releases)
   - [Download AppImage](https://github.com/xPTM1219/xournalpp_mobile/releases) (any distribution)
 
 ### Visible parts already working
@@ -176,6 +175,6 @@ This project is licensed under the terms and conditions of the EUPL-1.2 found in
 
 ## CI
 
-Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build, release APK and the AppImage (Docker build with a launch smoke test) on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, deb, AppImage) and attaches them to a GitHub release via `.github/workflows/release.yml`.
+Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build, release APK and the AppImage (Docker build with a launch smoke test) on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, AppImage) and attaches them to a GitHub release via `.github/workflows/release.yml`.
 
 No repository secrets are required. APK signing falls back to the debug key when `key.properties` is absent.
