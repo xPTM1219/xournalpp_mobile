@@ -132,6 +132,57 @@ chmod +x xournalpp-mobile-*-x86_64.AppImage
 ./xournalpp-mobile-*-x86_64.AppImage
 ```
 
+### Android
+
+The release APK is built with the debug key when `key.properties` is absent,
+so no signing setup is needed for local and CI builds. A full release signing
+setup is tracked in [TODO.md](TODO.md).
+
+Prerequisites: JDK 17, the full Android SDK (cmdline-tools,
+`platforms;android-35`, `build-tools`) and adb. Check what is missing on your
+machine:
+
+```shell
+scripts/check-android-env.sh
+```
+
+The script prints the exact `sdkmanager` install steps for each missing part.
+A bare platform-tools install (adb only) is not enough to build.
+
+Build the release APK (a fat APK that installs on any tablet):
+
+```shell
+scripts/build-android-apk.sh                   # build/app/outputs/flutter-apk/app-release.apk
+scripts/build-android-apk.sh --split-per-abi   # one APK per ABI instead
+scripts/build-android-apk.sh --install         # also adb install -r on a connected device
+```
+
+Manual commands, if you prefer:
+
+```shell
+flutter build apk --release
+adb install -r build/app/outputs/flutter-apk/app-release.apk
+```
+
+#### Tablet sideload
+
+1. On the tablet, enable **Developer options** (tap *Build number* seven times
+   in *Settings › About tablet*) and inside it **USB debugging**.
+2. Connect by USB and accept the debugging prompt on the tablet
+   (`adb devices` must list it), then:
+
+   ```shell
+   scripts/build-android-apk.sh --install
+   ```
+
+3. Without a USB cable: copy the APK to the tablet (download from the
+   [releases](https://github.com/xPTM1219/xournalpp_mobile/releases) page or
+   `adb push <apk> /sdcard/Download/`), then open it from a file manager. You
+   must allow **Install unknown apps** for that file manager once; after the
+   warning, confirm the install.
+
+The same steps install the APK artifact from CI or a release download.
+
 ## Colors and Typography
 
 ### Colors
@@ -175,6 +226,6 @@ This project is licensed under the terms and conditions of the EUPL-1.2 found in
 
 ## CI
 
-Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build, release APK and the AppImage (Docker build with a launch smoke test) on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, AppImage) and attaches them to a GitHub release via `.github/workflows/release.yml`.
+Continuous integration runs on GitHub Actions (`.github/workflows/ci.yml`): analyze + test, Linux bundle, web build, release APK (artifact `xournalpp-mobile-<version>.apk`) and the AppImage (Docker build with a launch smoke test) on every push to `main`. Pushing a `v*` tag builds release artifacts (APK, AppImage) and attaches them to a GitHub release via `.github/workflows/release.yml`.
 
 No repository secrets are required. APK signing falls back to the debug key when `key.properties` is absent.

@@ -3,6 +3,26 @@
 Deferred work recorded during phase 1 (toolchain modernization). The items
 here are known breakages or follow-ups that later phases will pick up.
 
+## Phase 6 deferred items (Android APK)
+
+- [ ] Full release signing setup. Release APKs are currently signed with the
+      debug key when `key.properties` is absent
+      (`android/app/build.gradle.kts` already reads `key.properties` and picks
+      the `release` config when present). Steps needed:
+  - [ ] Generate a upload keystore:
+        `keytool -genkey -v -keystore ~/xournal-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`.
+        Back the file up; losing it means a new app identity on stores.
+  - [ ] Create `android/key.properties` (gitignored) from this template:
+        `storeFile=/absolute/path/to/xournal-upload.jks`,
+        `storePassword=...`, `keyAlias=upload`, `keyPassword=...`.
+  - [ ] Add the GitHub secrets `KEY_BASE64` (base64 of the keystore),
+        `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`; CI decodes the
+        keystore, writes `key.properties`, and signs the release APK properly
+        (keep the debug-key fallback for unsigned local builds).
+  - [ ] Play Store listing consideration: an AAB (`flutter build appbundle`)
+        is required for new Play listings; decide whether to publish an AAB
+        next to the APK in releases.
+
 ## Phase 5 deferred items (AppImage)
 
 - [ ] The appimage-builder distro matrix tests stay disabled (`--skip-tests`
