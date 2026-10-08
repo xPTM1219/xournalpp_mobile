@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:xournalpp/src/XppFile.dart';
+import 'package:xournalpp/src/conditional/download/download.dart';
+import 'package:xournalpp/src/conditional/file_storage/file_storage.dart';
 
 /// File name suffix used for every notebook written by this app.
 const String kXoppFileExtension = 'xopp';
@@ -18,10 +20,10 @@ class FileSelectionCanceledException implements Exception {
 
 /// Platform-agnostic save/open helpers for `.xopp` notebooks.
 ///
-/// Android and desktop read and write real files with `dart:io`, the "save
-/// as" flow goes through the SAF-capable `file_picker` save dialog, and web
-/// delegates to `FilePickerCross` (localStorage) until phase 7 moves it to
-/// IndexedDB.
+/// Android and desktop read and write real files with `dart:io`; the "save
+/// as" flow goes through the SAF-capable `file_picker` save dialog. On the
+/// web, documents persist in browser storage (IndexedDB) and "save as"
+/// downloads the `.xopp` file to the user's device.
 class FileService {
   /// Writes the [file] bytes and returns the saved path for the recent files
   /// list.
@@ -29,21 +31,16 @@ class FileService {
   /// [existingPath] is the path the document was opened from. When it still
   /// exists, the save overwrites it in place; otherwise the document lands in
   /// the application documents directory as `<title>.xopp`. On the web the
-  /// bytes go into the internal fake filesystem that [pickInternal] reads
-  /// back, so recently saved documents can be reopened in the same browser.
+  /// bytes go into browser storage under the document title, so the notebook
+  /// survives a reload and can be reopened from the recent list.
   static Future<String> saveXopp(XppFile file, {String? existingPath}) async {
     final Uint8List bytes = file.toUint8List()!;
-    if (kIsWeb) {
-      final String fileName = _xoppFileName(file);
-      final String targetPath =
-          (existingPath != null && existingPath.startsWith('/'))
-              ? existingPath
-              : '/xournalpp/$fileName';
-      final FilePickerCross cross = FilePickerCross(bytes, path: targetPath);
-      await cross.saveToPath(path: targetPath);
-      return targetPath;
-    }
     final String fileName = _xoppFileName(file);
+    if (kIsWeb) {
+      final String storageName = _storageNameFor(file, existingPath, fileName);
+      await saveToBrowserStorage(storageName, bytes);
+      return '/xournalpp/$storageName';
+    }
     // Overwrite in place only when the document came from a real `.xopp`
     // file that is still present. Anything else falls back to the
     // application documents directory.
@@ -62,14 +59,14 @@ class FileService {
   /// Opens the "save as" dialog and writes the [file] bytes to the chosen
   /// location. Returns the selected path, or null when the dialog was
   /// canceled.
+  ///
+  /// On the web this triggers a browser download of `<title>.xopp` and
+  /// returns the file name.
   static Future<String?> exportXoppAs(XppFile file) async {
     final Uint8List bytes = file.toUint8List()!;
+    final String fileName = _xoppFileName(file);
     if (kIsWeb) {
-      // Phase 7 turns this into a browser download; for now the web keeps
-      // the old FilePickerCross export which triggers a download.
-      final FilePickerCross cross = FilePickerCross(bytes,
-          type: FileTypeCross.custom, fileExtension: kXoppFileExtension);
-      return cross.exportToStorage(fileName: _xoppFileName(file));
+      return downloadFile(fileName, bytes);
     }
     // `.xopp` maps to no known MIME type on Android/iOS, so the plugin
     // rejects `FileType.custom` with that extension. The generic type keeps
@@ -77,7 +74,7 @@ class FileService {
     // by extension natively.
     final bool filterByExtension = !(Platform.isAndroid || Platform.isIOS);
     final String? path = await FilePicker.platform.saveFile(
-      fileName: _xoppFileName(file),
+      fileName: fileName,
       type: filterByExtension ? FileType.custom : FileType.any,
       allowedExtensions:
           filterByExtension ? const [kXoppFileExtension] : null,
@@ -140,15 +137,20 @@ class FileService {
         fileExtension: kXoppFileExtension);
   }
 
-  /// Reads a document back from the app-internal fake filesystem, which is
-  /// where [saveXopp] stores documents on the web. On IO platforms the path
-  /// is resolved against the application documents directory, matching how
-  /// [saveXopp] writes them there.
+  /// Reads a document back from browser storage (web) or the
+  /// app-internal fake filesystem / documents directory (IO), which is
+  /// where [saveXopp] stores documents. The returned [FilePickerCross]
+  /// carries the original path so parsing extracts the document title.
   ///
   /// Throws [StateError] when no data is stored under [path].
   static Future<FilePickerCross> pickInternal(String path) async {
     if (kIsWeb) {
-      return FilePickerCross.fromInternalPath(path: path);
+      final String storageName = path.split('/').last;
+      final Uint8List bytes = await loadFromBrowserStorage(storageName);
+      return FilePickerCross(bytes,
+          path: path,
+          type: FileTypeCross.custom,
+          fileExtension: kXoppFileExtension);
     }
     final String fileName = path.split('/').last;
     final Directory documents = await getApplicationDocumentsDirectory();
@@ -157,6 +159,31 @@ class FileService {
         path: path,
         type: FileTypeCross.custom,
         fileExtension: kXoppFileExtension);
+  }
+
+  /// Lists the documents persisted in browser storage (web only), most
+  /// recent first. Returns an empty list on IO platforms.
+  static Future<List<StoredFileInfo>> listBrowserStoredFiles() async {
+    if (!kIsWeb) return [];
+    return listBrowserStorage();
+  }
+
+  /// Deletes the document stored under [storagePath] from browser storage
+  /// (web only). No-op on IO platforms.
+  static Future<void> deleteBrowserStoredFile(String storagePath) async {
+    if (!kIsWeb) return;
+    await deleteFromBrowserStorage(storagePath.split('/').last);
+  }
+
+  /// Storage key for a web save: keeps the previously used name when the
+  /// document was opened from browser storage so in-place saves replace the
+  /// same record.
+  static String _storageNameFor(XppFile file, String? existingPath,
+      String fallbackName) {
+    if (existingPath != null && existingPath.startsWith('/xournalpp/')) {
+      return existingPath.substring('/xournalpp/'.length);
+    }
+    return fallbackName;
   }
 
   /// File name for a document, falling back to a generic name when untitled.

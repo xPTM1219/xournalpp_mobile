@@ -77,5 +77,6 @@
   "mb": "MB",
   "sharePage": "Compartilhar página...",
   "successfullyShared": "Compartilhado com sucesso",
-  "importPdf": "Importar PDF"
+  "importPdf": "Importar PDF",
+  "savedToBrowserStorage": "Salvo no armazenamento do navegador."
 }

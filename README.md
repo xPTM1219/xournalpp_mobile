@@ -21,8 +21,12 @@ Of course, any help is welcome.
 ***Mission completed:** We can now render strokes, images and text and LaTeX!. We thereby support the full `.xopp` file format.* :tada:
 
 - Web
-  - [Open web app](https://xournal.online/)
-  - [Access via TOR](http://xournaltdtf7ygqxg3qik4tdg476smkukogil74t6oxqiwdnumy53hqd.onion/)
+  - [Open web app](https://xptm1219.github.io/xournalpp_mobile/)
+
+  On the web, **Save** stores the notebook in your browser's storage
+  (IndexedDB), so it is still there after a reload. **Save as...** downloads
+  the `.xopp` file to your device. You can reopen a notebook by dropping the
+  file onto the open page or by using the file picker button.
 - Android
   - [Download in Google Play](https://play.google.com/store/apps/details?id=online.xournal.mobile)
   - [Download APK](https://github.com/xPTM1219/xournalpp_mobile/releases)
@@ -102,6 +106,28 @@ If you want to test for the web, please run:
 flutter config --enable-web
 flutter run -d web --release # unfortunately, the debug flavour will result an empty screen
 ```
+
+To test the GitHub Pages subpath layout locally:
+
+```shell
+flutter build web --release --base-href /xournalpp_mobile/
+# serve build/web under that prefix, e.g.:
+#   cd build/web && python3 -m http.server 8080
+# then open http://localhost:8080/xournalpp_mobile/
+```
+
+### Web deployment (GitHub Pages)
+
+The web app auto-deploys to
+<https://xptm1219.github.io/xournalpp_mobile/> whenever a `v*` tag is pushed
+(see `.github/workflows/pages.yml`). One-time setup for the repository:
+
+1. Go to **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Push a tag: `git tag v1.2.0 && git push origin v1.2.0`.
+
+The workflow can also be triggered manually from the **Actions** tab
+(*Deploy to GitHub Pages* → *Run workflow*).
 
 ### Desktop support
 

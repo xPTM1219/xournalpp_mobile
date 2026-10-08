@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:transparent_image/transparent_image.dart';
 import 'package:xournalpp/generated/l10n.dart';
 import 'package:xournalpp/main.dart';
 import 'package:xournalpp/pages/CanvasPage.dart';
@@ -90,6 +91,24 @@ class _OpenPageState extends State<OpenPage>
         _loadedRecent = true;
       });
     });
+    if (kIsWeb) {
+      // Merge documents persisted in browser storage into the recent list.
+      // SharedPreferences may hold stale entries for records already gone
+      // from IndexedDB, so the stored set is the source of truth.
+      FileService.listBrowserStoredFiles().then((stored) {
+        setState(() {
+          recentFiles.removeWhere((element) =>
+              (element['path'] as String?)?.startsWith('/xournalpp/') ?? false);
+          for (final info in stored) {
+            recentFiles.add({
+              'preview': base64Encode(kTransparentImage),
+              'name': info.name.substring(0, info.name.length - '.xopp'.length),
+              'path': '/xournalpp/${info.name}',
+            });
+          }
+        });
+      });
+    }
     super.initState();
   }
 
@@ -420,7 +439,12 @@ class _OpenPageState extends State<OpenPage>
                     child: Text(S.of(context).cancel)),
                 TextButton(
                     onPressed: () async {
-                      FilePickerCross.delete(path: path);
+                      if (kIsWeb && path.startsWith('/xournalpp/')) {
+                        // Remove the document from browser storage too.
+                        await FileService.deleteBrowserStoredFile(path);
+                      } else {
+                        FilePickerCross.delete(path: path);
+                      }
                       setState(() {
                         recentFiles
                             .removeWhere((element) => element['path'] == path);

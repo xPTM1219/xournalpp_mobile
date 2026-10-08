@@ -510,7 +510,9 @@ class _CanvasPageState extends State<CanvasPage> with TickerProviderStateMixin {
       snackBarController.close();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(S.of(context).successfullySaved),
+          content: Text(kIsWeb && !export
+              ? S.of(context).savedToBrowserStorage
+              : S.of(context).successfullySaved),
         ),
       );
     } catch (e) {

@@ -106,6 +106,9 @@ class MessageLookup extends MessageLookupByLibrary {
     "ruled": MessageLookupByLibrary.simpleMessage("Ruled"),
     "save": MessageLookupByLibrary.simpleMessage("Save"),
     "saveAs": MessageLookupByLibrary.simpleMessage("Save as..."),
+    "savedToBrowserStorage": MessageLookupByLibrary.simpleMessage(
+      "Saved to browser storage.",
+    ),
     "savingFile": MessageLookupByLibrary.simpleMessage("Saving file..."),
     "selectColor": MessageLookupByLibrary.simpleMessage("Select color"),
     "selectNotImplemented": MessageLookupByLibrary.simpleMessage(
