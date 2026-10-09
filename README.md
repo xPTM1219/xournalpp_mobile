@@ -120,11 +120,8 @@ flutter build web --release --base-href /xournalpp_mobile/
 
 The web app auto-deploys to
 <https://xptm1219.github.io/xournalpp_mobile/> whenever a `v*` tag is pushed
-(see `.github/workflows/pages.yml`). One-time setup for the repository:
-
-1. Go to **Settings → Pages**.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. Push a tag: `git tag v1.2.0 && git push origin v1.2.0`.
+(see `.github/workflows/pages.yml`; GitHub Pages is enabled by the workflow
+itself). To deploy, push a tag: `git tag v1.2.0 && git push origin v1.2.0`.
 
 The workflow can also be triggered manually from the **Actions** tab
 (*Deploy to GitHub Pages* → *Run workflow*).
