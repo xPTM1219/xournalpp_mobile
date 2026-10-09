@@ -78,5 +78,6 @@
   "sharePage": "Seite teilen...",
   "successfullyShared": "Erfolgreich geteilt:",
   "openNavigation": "Navigation öffnen",
-  "importPdf": "PDF importieren"
+  "importPdf": "PDF importieren",
+  "savedToBrowserStorage": "Im Browser-Speicher gespeichert."
 }

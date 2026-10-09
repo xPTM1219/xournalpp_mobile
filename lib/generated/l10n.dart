@@ -663,6 +663,16 @@ class S {
   String get importPdf {
     return Intl.message('Import PDF', name: 'importPdf', desc: '', args: []);
   }
+
+  /// `Saved to browser storage.`
+  String get savedToBrowserStorage {
+    return Intl.message(
+      'Saved to browser storage.',
+      name: 'savedToBrowserStorage',
+      desc: '',
+      args: [],
+    );
+  }
 }
 
 class AppLocalizationDelegate extends LocalizationsDelegate<S> {
