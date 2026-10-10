@@ -28,7 +28,7 @@ abstract class XppStroke extends XppContent {
     double y = points![0].y!;
     // finding smallest y point
     points!.forEach((point) {
-      if (point.y! < y) y = point.y!;
+      if (point.y! < y) x = point.y;
     });
     return (Offset(x!, y));
   }
@@ -43,7 +43,7 @@ abstract class XppStroke extends XppContent {
     double y = points![0].y!;
     // finding largest y point
     points!.forEach((point) {
-      if (point.y! > y) y = point.y!;
+      if (point.y! > y) x = point.y;
     });
     return (Offset(x!, y));
   }
@@ -53,12 +53,10 @@ abstract class XppStroke extends XppContent {
     if (points!.isEmpty) {
       return XppPageContentWidget(child: (Container()));
     }
-    // Eraser strokes render white like on desktop. The stored color stays
-    // untouched so the next save writes the parsed color again.
-    Color colorToUse = color ?? Colors.black;
-    if (tool == XppStrokeTool.ERASER) colorToUse = Colors.white;
+    Color? colorToUse = color;
+    if (tool == XppStrokeTool.ERASER) color = Colors.white;
     if (tool == XppStrokeTool.HIGHLIGHTER) {
-      colorToUse = colorToUse.withValues(alpha: .5);
+      color = color!.withOpacity(.5);
     }
     return XppPageContentWidget(
       child: CustomPaint(
@@ -132,23 +130,14 @@ abstract class XppStroke extends XppContent {
 
   @override
   bool inRegion({Offset? topLeft, Offset? bottomRight}) {
-    if (topLeft == null || bottomRight == null) return false;
-    if (points == null || points!.isEmpty) return false;
-    return XppContent.boxInRegion(
-        getOffset(), this.bottomRight, topLeft, bottomRight);
+    // TODO: implement shouldSelectAt
+    throw UnimplementedError();
   }
 
   @override
   bool shouldSelectAt({Offset? coordinates, EditingTool? tool}) {
-    if (coordinates == null) return false;
-    if (points == null || points!.isEmpty) return false;
-    double width = 0;
-    for (final XppStrokePoint point in points!) {
-      if ((point.width ?? 0) > width) width = point.width ?? 0;
-    }
-    // Half of the widest point gives room around thin strokes.
-    return XppContent.pointInBox(coordinates, getOffset(), bottomRight,
-        tolerance: width / 2);
+    // TODO: implement shouldSelectAt
+    throw UnimplementedError();
   }
 
   XppStroke newStroke({Color? color, List<XppStrokePoint>? points});

@@ -164,7 +164,14 @@ class _CanvasPageState extends State<CanvasPage> with TickerProviderStateMixin {
                     ),
                   ),
                 ),
-              )),
+              ))
+          /*ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                      Theme.of(context).colorScheme.surface.withOpacity(.5),
+                      BlendMode.darken),
+                  child: child,
+                )*/
+          ,
         ),
         Positioned(
           bottom: 16,

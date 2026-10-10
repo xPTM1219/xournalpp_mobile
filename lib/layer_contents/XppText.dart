@@ -23,12 +23,6 @@ class XppText extends XppContent {
   @override
   Offset? getOffset() => offset;
 
-  /// Estimated box end for hit tests. The XOPP format stores no text box, so
-  /// the width assumes an average glyph advance of 0.6 em at [size] until a
-  /// real layout measures the rendered text.
-  Offset get estimatedBottomRight =>
-      offset! + Offset(text!.length * size! * 0.6, size!);
-
   @override
   XppPageContentWidget render() {
     return XppPageContentWidget(
@@ -57,17 +51,14 @@ class XppText extends XppContent {
 
   @override
   bool inRegion({Offset? topLeft, Offset? bottomRight}) {
-    if (topLeft == null || bottomRight == null) return false;
-    if (offset == null || text == null || size == null) return false;
-    return XppContent.boxInRegion(
-        offset!, estimatedBottomRight, topLeft, bottomRight);
+    // TODO: implement inRegion
+    throw UnimplementedError();
   }
 
   @override
   bool shouldSelectAt({Offset? coordinates, EditingTool? tool}) {
-    if (coordinates == null) return false;
-    if (offset == null || text == null || size == null) return false;
-    return XppContent.pointInBox(coordinates, offset!, estimatedBottomRight);
+    // TODO: implement shouldSelectAt
+    throw UnimplementedError();
   }
 }
 

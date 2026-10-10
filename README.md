@@ -10,17 +10,11 @@ A port of the main features of Xournal++ to various Flutter platforms like Andro
 
 ## Updated repo
 
-This repo picks up the work from the abandoned upstream repo with the
-objective of updating it and fixing existing issues. I have no plans for the
-moment of testing the iOS app since I don't own
+This repo picks up the work from the possible abandoned repo in Gitlab and now
+archived Github repo with the objective of updating it and fixing existing
+issues. I have no plans for the moment of testing the iOS app since I don't own
 any Apple device. I will be testing in Linux, Android, Web and Windows.
 Of course, any help is welcome.
-
-## Contributing
-
-Please check open [issues](https://github.com/xPTM1219/xournalpp_mobile/issues)
-and the deferred-work list in [TODO.md](TODO.md) before starting work.
-Bug reports and pull requests are welcome.
 
 ## Try it out
 
@@ -53,7 +47,7 @@ Bug reports and pull requests are welcome.
 - [x] Highlighter
 - [x] LaTeX
 - [x] Recent files list
-- [x] Whiteout eraser strokes
+- [ ] Whiteout eraser
 - [x] Saving
 - [x] Basic editing
 - [x] Basic PDF rendering
@@ -83,6 +77,8 @@ Bug reports and pull requests are welcome.
 
 ### Prepare
 
+> You would like to contribute? Please check out issues to solve [here](https://github.com/xPTM1219/xournalpp_mobile/issues) or get our `// TODO:`s [here](https://github.com/xPTM1219/xournalpp_mobile/blob/main/TODO.md)!
+
 Get your information about the `.xopp` file format at http://www-math.mit.edu/~auroux/software/xournal/manual.html#file-format .
 
 Install Flutter first. See [flutter.dev](https://flutter.dev/docs/get-started/install) for more details.
@@ -111,19 +107,14 @@ flutter config --enable-web
 flutter run -d web --release # unfortunately, the debug flavour will result an empty screen
 ```
 
-To test the GitHub Pages locally:
+To test the GitHub Pages subpath layout locally:
 
-```bash
-# 1
-flutter build web --release
-
-# 2. Go inside build/web
-cd build/web
-
-# 3. Run the server
-python3 -m http.server 8080
+```shell
+flutter build web --release --base-href /xournalpp_mobile/
+# serve build/web under that prefix, e.g.:
+#   cd build/web && python3 -m http.server 8080
+# then open http://localhost:8080/xournalpp_mobile/
 ```
-* Go to `http://localhost:8080/`, or the port used above.
 
 ### Web deployment (GitHub Pages)
 
@@ -196,7 +187,7 @@ flutter build apk --release
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
 
-#### Tablet installation
+#### Tablet sideload
 
 1. On the tablet, enable **Developer options** (tap *Build number* seven times
    in *Settings › About tablet*) and inside it **USB debugging**.
@@ -254,7 +245,7 @@ This project is licensed under the terms and conditions of the EUPL-1.2 found in
 
 ## Resources
 
-* [Web application](https://xptm1219.github.io/xournalpp_mobile/)
+* [Original project in Gitlab](https://gitlab.com/TheOneWithTheBraid/xournalpp_mobile)
 
 ## CI
 

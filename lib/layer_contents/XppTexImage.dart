@@ -10,10 +10,7 @@ import 'package:xournalpp/widgets/ToolBoxBottomSheet.dart';
 class XppTexImage extends XppContent {
   Offset? topLeft = Offset(0, 0);
 
-  /// Bottom/right corner of the element box. The XOPP format derives the
-  /// box from the rendered formula, so freshly created elements keep
-  /// (0, 0) until a render pass measures it; parsed desktop files carry
-  /// the saved box.
+  /// TODO: proper implementation of bottom and right
   Offset? bottomRight = Offset(0, 0);
 
   @required
@@ -54,21 +51,12 @@ class XppTexImage extends XppContent {
         text: laTeXController.text, topLeft: topLeft, color: color));
   }
 
-  /// Render font size: the saved box height, or a readable default while
-  /// the box is still unknown.
-  double get fontSize {
-    final Offset? min = topLeft;
-    final Offset? max = bottomRight;
-    if (min == null || max == null) return 18;
-    final double height = (max.dy - min.dy).abs();
-    return height > 0 ? height : 18;
-  }
-
   @override
   XppPageContentWidget render() {
     return XppPageContentWidget(
       child: DefaultTextStyle(
-        style: TextStyle(color: color, fontSize: fontSize),
+        style:
+            TextStyle(color: color, fontSize: 18), // TODO: implement text size
         child: Math.tex('\\displaystyle{$text}'),
       ),
       onSelected: () => print('Edit LaTeX!'),
@@ -93,16 +81,13 @@ class XppTexImage extends XppContent {
 
   @override
   bool inRegion({Offset? topLeft, Offset? bottomRight}) {
-    if (topLeft == null || bottomRight == null) return false;
-    if (this.topLeft == null || this.bottomRight == null) return false;
-    return XppContent.boxInRegion(
-        this.topLeft!, this.bottomRight!, topLeft, bottomRight);
+    // TODO: implement inRegion
+    throw UnimplementedError();
   }
 
   @override
   bool shouldSelectAt({Offset? coordinates, EditingTool? tool}) {
-    if (coordinates == null) return false;
-    if (topLeft == null || bottomRight == null) return false;
-    return XppContent.pointInBox(coordinates, topLeft!, bottomRight!);
+    // TODO: implement shouldSelectAt
+    throw UnimplementedError();
   }
 }
