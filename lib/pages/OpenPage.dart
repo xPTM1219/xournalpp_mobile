@@ -47,34 +47,11 @@ class _OpenPageState extends State<OpenPage>
       ..addListener((() => setState(() {})));
 
     // trying to load fitting locale
-
     try {
       if (['en', 'de', 'pt'].contains(View.of(context).platformDispatcher.locale.languageCode))
         S.load(Locale(View.of(context).platformDispatcher.locale.languageCode));
 
       /// TODO: implement custom change of language
-      // checking for locale override
-      /*Preferences().fetch('language').then((languageCode) {
-      switch (languageCode) {
-        case 'en':
-          S.load(Locale('en'));
-          break;
-
-        case 'de':
-          S.load(Locale('de'));
-          break;
-
-        case 'fr':
-          S.load(Locale('fr'));
-          break;
-
-          case 'tlh':
-            S.load(Locale('tlh'));
-            break;
-          default:
-            break;
-        }
-      });*/
     } catch (e) {}
 
     SharedPreferences.getInstance().then((prefs) {
@@ -210,7 +187,8 @@ class _OpenPageState extends State<OpenPage>
                 final _file = await XppFile.importPdf(
                     pdf: await FilePickerCross.importFromStorage(
                         type: FileTypeCross.custom,
-                        fileExtension: 'pdf')); // TODO `.pdf`
+                        // The picker filters to .pdf via the file extension.
+                        fileExtension: 'pdf'));
                 snackBarController.close();
                 Navigator.of(context).push(
                     MaterialPageRoute(builder: (c) => CanvasPage(file: _file)));

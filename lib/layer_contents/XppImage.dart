@@ -83,13 +83,16 @@ class XppImage extends XppContent {
 
   @override
   bool inRegion({Offset? topLeft, Offset? bottomRight}) {
-    // TODO: implement inRegion
-    throw UnimplementedError();
+    if (topLeft == null || bottomRight == null) return false;
+    if (this.topLeft == null || this.bottomRight == null) return false;
+    return XppContent.boxInRegion(
+        this.topLeft!, this.bottomRight!, topLeft, bottomRight);
   }
 
   @override
   bool shouldSelectAt({Offset? coordinates, EditingTool? tool}) {
-    // TODO: implement shouldSelectAt
-    throw UnimplementedError();
+    if (coordinates == null) return false;
+    if (topLeft == null || bottomRight == null) return false;
+    return XppContent.pointInBox(coordinates, topLeft!, bottomRight!);
   }
 }
