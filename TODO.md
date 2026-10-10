@@ -1,15 +1,85 @@
 # TODO
 
-Deferred work recorded during phase 1 (toolchain modernization). The items
-here are known breakages or follow-ups that later phases will pick up.
+Deferred work for Xournal++ Mobile. Every item carries a one-line context and
+the files it touches; finished work moves out of this list.
 
-## Phase 6 deferred items (Android APK)
+## Save/Open
 
-- [ ] Full release signing setup. Release APKs are currently signed with the
-      debug key when `key.properties` is absent
-      (`android/app/build.gradle.kts` already reads `key.properties` and picks
-      the `release` config when present). Steps needed:
-  - [ ] Generate a upload keystore:
+- [ ] Full `file_picker_cross` removal. Phase 3 moved only the flaky save and
+      open paths to `file_picker` + `path_provider`
+      (`lib/src/file_service.dart`). Remaining call sites:
+  - Recent files list: `OpenPage.dart` still uses
+    `FilePickerCross.fromInternalPath` for taps and
+    `FilePickerCross.delete` for removal; those paths only reach the
+    internal fake filesystem written by the vendored package.
+  - Background lookups: `XppBackground.dart` resolves pixmap/pdf backgrounds
+    through `FilePickerCross.fromInternalPath` (including the pdf import
+    path in `XppFile.importPdf`).
+  - Share-intent open path: `OpenPage.receivedShareNotification` decodes via
+    `openFileByUri` (`lib/src/conditional/open_file/*.dart`), which wraps
+    bytes in `FilePickerCross`.
+  - Remaining pickers: web branch of `FileService.pickXopp`
+    (`lib/src/file_service.dart`), image insert dialog
+    (`lib/layer_contents/XppImage.dart`), Import PDF dialog
+    (`lib/pages/OpenPage.dart`), quota tile (`lib/widgets/QuotaTile.dart`).
+  - Web download leftovers: `CanvasPage.shareScreenshot` and the web branch
+    of `FileService.exportXoppAs` still use
+    `FilePickerCross.exportToStorage`; the browser save/open already moved
+    to IndexedDB in phase 7.
+  - `XppFile.toFilePickerCross` helper is now unused; delete it during the
+    removal.
+- [ ] After removal, drop the vendored copy at
+      `third_party/file_picker_cross` (plus the vendored `disk_space` fork if
+      nothing else needs it) and the `file_picker`, `package_info_plus`,
+      `win32`, `file`, and `share_plus` `dependency_overrides` from
+      `pubspec.yaml`.
+- [ ] Streaming XML parse + lazy page loading for constant-memory open of
+      huge `.xopp` files. The parser in `XppFile.fromFilePickerCross` still
+      buffers the whole decompressed XML text and the full document tree;
+      a streaming parse (`XmlEventIterator`) with on-demand page loading
+      would make open memory constant per page.
+- [ ] Share-intent optimization: do not copy files we can read directly.
+      `receivedShareNotification` in `lib/pages/OpenPage.dart` copies every
+      shared file into the app directory before parsing.
+
+## Rendering
+
+- [ ] Layer management UI: multi-layer draw/select/reorder. New content is
+      always appended to layer 0 (`/// TODO: manage layers` in
+      `lib/pages/CanvasPage.dart`).
+- [ ] Pixmap page backgrounds on web. The pixmap background lookup is
+      desktop/mobile only (`/// TODO: implement background for web` in
+      `lib/src/XppBackground.dart`).
+- [ ] Teximage bottom/right corners and LaTeX text-size handling. The box is
+      derived from the render, not stored; freshly created elements keep
+      (0, 0) until a render pass measures it (`lib/layer_contents/XppTexImage.dart`).
+- [ ] Selection tools. The `inRegion`/`shouldSelectAt` helpers are
+      implemented and tested (`lib/layer_contents/*.dart`); a select tool
+      that uses them is still missing.
+- [ ] LaTeX renderer parity review. `katex_flutter` was removed (unresolvable
+      on Dart 3); the call site renders with `flutter_math_fork`
+      (`lib/layer_contents/XppTexImage.dart`). Some TeX constructs differ
+      between the two renderers.
+
+## Platforms
+
+- [ ] Custom language switcher setting. The app auto-loads en/de/pt from the
+      platform locale; a user override is not implemented
+      (`/// TODO: implement custom change of language` in
+      `lib/pages/OpenPage.dart`).
+- [ ] `receive_sharing_intent` 1.9 upgrade when Flutter 3.38+ is adopted;
+      1.8.1 dropped the text-sharing API (`getTextStream`/`getInitialText`),
+      re-evaluate text intent handling then (`lib/pages/OpenPage.dart`).
+- [ ] Web maskable icons. The icon set has `Icon-1024.png` but not the
+      maskable icons the current template ships (`web/`).
+
+## Build/Release
+
+- [ ] Android release signing setup. Release APKs are currently signed with
+      the debug key when `key.properties` is absent
+      (`android/app/build.gradle.kts` already reads `key.properties` and
+      picks the `release` config when present). Steps needed:
+  - [ ] Generate an upload keystore:
         `keytool -genkey -v -keystore ~/xournal-upload.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`.
         Back the file up; losing it means a new app identity on stores.
   - [ ] Create `android/key.properties` (gitignored) from this template:
@@ -17,119 +87,32 @@ here are known breakages or follow-ups that later phases will pick up.
         `storePassword=...`, `keyAlias=upload`, `keyPassword=...`.
   - [ ] Add the GitHub secrets `KEY_BASE64` (base64 of the keystore),
         `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`; CI decodes the
-        keystore, writes `key.properties`, and signs the release APK properly
-        (keep the debug-key fallback for unsigned local builds).
+        keystore, writes `key.properties`, and signs the release APK
+        properly (keep the debug-key fallback for unsigned local builds).
   - [ ] Play Store listing consideration: an AAB (`flutter build appbundle`)
         is required for new Play listings; decide whether to publish an AAB
         next to the APK in releases.
-
-## Phase 5 deferred items (AppImage)
-
-- [ ] The appimage-builder distro matrix tests stay disabled (`--skip-tests`
-      needs Docker-in-Docker). `scripts/test-appimage.sh` does a 15s launch
-      smoke test instead; a full matrix run is possible later with the
-      appimage-builder test environments.
-- [ ] The Docker image is rebuilt on every CI run because the runner has no
-      layer cache. Cache it in GHCR or with `actions/cache` to save several
-      minutes per run.
-- [ ] Only x86_64 is built. An aarch64 AppImage needs the arm64 Flutter
-      artifacts, an arm64 `apt.arch`, and an arm64 build host or emulation.
-- [ ] The AppImage relies on the host X11/Wayland client libraries (the
-      default appimage-builder exclude list drops them). If a target host
-      lacks them, add `libx11-6` and the xcb/wayland packages to the recipe
-      `apt.include` list.
-
-## Phase 4 deferred items (PDF memory)
-
-- [ ] Streaming XML parse + lazy page loading for constant-memory open of
-      huge `.xopp` files. The parser in `XppFile.fromFilePickerCross` still
-      buffers the whole decompressed XML text and the full document tree;
-      a streaming parse (`XmlEventIterator`) with on-demand page loading
-      would make open memory constant per page.
-
-## Phase 3 deferred items (file_picker_cross removal)
-
-- [ ] Full `file_picker_cross` removal. Phase 3 moved only the flaky save and
-      open paths to `file_picker` + `path_provider`
-      (`lib/src/file_service.dart`). Remaining call sites:
-      - Recent files list: `OpenPage.dart` still uses
-        `FilePickerCross.fromInternalPath` for taps and
-        `FilePickerCross.delete` for removal; those paths only reach the
-        internal fake filesystem written by the vendored package.
-      - Background lookups: `XppBackground.dart` resolves pixmap/pdf
-        backgrounds through `FilePickerCross.fromInternalPath` (including
-        `fromInternalPath` in `XppBackground.dart` and the pdf import path in
-        `XppFile.importPdf`).
-      - Share-intent open path: `OpenPage.receivedShareNotification` decodes
-        via `openFileByUri` (`lib/src/conditional/open_file/*.dart`), which
-        wraps bytes in `FilePickerCross`.
-      - Web-only leftovers: `CanvasPage.shareScreenshot` and the web branch of
-        `FileService.exportXoppAs` still use `FilePickerCross.exportToStorage`
-        (web download). Phase 7 replaces the web save/open with IndexedDB.
-      - `XppFile.toFilePickerCross` helper is now unused; delete it during the
-        removal.
-- [ ] After removal, drop the vendored copy at
-      `third_party/file_picker_cross` (plus the vendored `disk_space` fork if
-      nothing else needs it) and the `file_picker`, `package_info_plus`,
-      `win32`, `file`, and `share_plus` `dependency_overrides` from
-      `pubspec.yaml`.
-
-## Toolchain (phase 1 deferred items)
-
-- [ ] `file_picker_cross` is vendored at `third_party/file_picker_cross`
-      (fork of 4.6.0). Upstream is unmaintained (2022, Dart 2 era) and used the
-      removed `NullThrownError`; the fork patches the 3 throw sites and bumps
-      the SDK bound. Plan for phase 3: keep `FilePickerCross` for the recent
-      files list and internal paths, replace the flaky open/save path with
-      `file_picker` + `path_provider` + `share_plus`, then shrink or retire
-      the vendored copy. Also drop the `file_picker`/`package_info_plus`/
-      `win32`/`file` dependency overrides once the vendored copy is gone.
-- [ ] `katex_flutter` was removed (unresolvable on Dart 3). The single LaTeX
-      call site in `lib/layer_contents/XppTexImage.dart` now renders with
-      `flutter_math_fork`. Review whether upstream KaTeX parity is needed
-      (some TeX constructs differ between the two renderers).
-- [ ] `receive_sharing_intent` 1.8.1 dropped the text-sharing API
-      (`getTextStream`/`getInitialText`); those listeners were removed from
-      `lib/pages/OpenPage.dart`. When Flutter 3.38+ is adopted, upgrade to
-      1.9.0 and re-evaluate text intent handling. The media stream is now
-      only wired on non-web platforms (the plugin has no web implementation).
-- [ ] `flutter_absolute_path` and `matrix_gesture_detector` were unused and
-      removed. Verify no dynamic use remains (none found in `lib/`).
-- [ ] Android release signing: `app/build.gradle.kts` signs release builds
-      with the debug key. Phase 6 adds the `key.properties` based setup and
-      documents the Android SDK + JDK 17 installation for local builds.
-- [ ] Local Android builds are not possible on this machine yet: no Android
-      SDK is installed (`flutter doctor` reports the toolchain missing). The
-      Gradle 8.12 + AGP 8.9.1 + Kotlin 2.1.0 configuration is validated up to
-      SDK resolution (`gradlew help` configures cleanly, then fails with
-      "SDK location not found"). Phase 6 / CI covers the real APK build.
-- [ ] Linux desktop build needs clang++, cmake, ninja and GTK 3 dev packages
-      (`libgtk-3-dev`), and the `linux/` scaffold still needs regeneration
-      when a phase builds Linux targets.
+- [ ] AppImage build pipeline improvements:
+  - [ ] The appimage-builder distro matrix tests stay disabled
+        (`--skip-tests` needs Docker-in-Docker); `scripts/test-appimage.sh`
+        does a 15s launch smoke test instead.
+  - [ ] The Docker image is rebuilt on every CI run because the runner has
+        no layer cache; cache it in GHCR or with `actions/cache`.
+  - [ ] Only x86_64 is built; an aarch64 AppImage needs arm64 Flutter
+        artifacts, an arm64 `apt.arch`, and an arm64 build host.
+  - [ ] The AppImage relies on the host X11/Wayland client libraries; add
+        `libx11-6` and the xcb/wayland packages to the recipe `apt.include`
+        list if a target host lacks them.
+- [ ] Local Android builds need the full Android SDK + JDK 17 on the dev
+      machine (`flutter doctor` reports the toolchain missing); CI always
+      produces APK artifacts (`scripts/check-android-env.sh` prints the
+      missing steps).
+- [ ] Linux desktop build needs clang++, cmake, ninja and GTK 3 dev packages,
+      and the `linux/` scaffold still needs regeneration when a phase builds
+      Linux targets.
+- [ ] Style-level analyzer infos (~300: file naming, `withOpacity`,
+      build context across async gaps). `flutter_lints` is enabled; clean
+      these up opportunistically, none block a build.
 - [ ] The `S` field in `ToolSettingDialog` is typed `Object?` and unused;
-      clean it up together with the surrounding dialog code.
-- [ ] `flutter analyze` reports ~270 style-level infos (file naming,
-      `withOpacity`, string interpolation, build context across async gaps).
-      Clean these up opportunistically; none block a build.
-- [ ] The web icon set has `Icon-1024.png` but not the maskable icons that
-      the current template ships; consider adding maskable icons with the
-      GitHub Pages work (phase 7).
-
-## Runtime fixes validated in phase 1
-
-- `CanvasPage.loadToolSettings` no longer force-unwraps missing
-  `toolColor`/`toolWidth` preferences; first launch now keeps the defaults
-  instead of throwing on every canvas open.
-- `EditingToolBar` guards `Platform.isAndroid`/`Platform.isIOS` with `kIsWeb`;
-  the unguarded `dart:io` access crashed every `build()` on web, which made
-  the editing toolbar invisible and killed the canvas page.
-- `DropFile` uses `onDropFile` instead of the deprecated `onDrop`; the old
-  callback received a raw `web.File` that failed the internal
-  `DropzoneFileInterface` cast, so dropped XOPP files never opened.
-- `XppLayerStack` builds a typed `List<Widget>`; the previous
-  `List<Widget?> ... as List<Widget>` cast threw on web whenever a page
-  rendered content (strokes, text), leaving the canvas blank.
-
-## Existing backlog (from issue 10 triage, phase 8)
-
-- [ ] Recorded after phase 8 triage.
+      clean it up together with the surrounding dialog code
+      (`lib/widgets/ToolSettingDialog.dart`).
