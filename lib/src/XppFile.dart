@@ -299,10 +299,10 @@ class XppFile {
               tool = XppStrokeTool.PEN;
               break;
             case "eraser":
-              // Eraser strokes parse as whiteout strokes; render() paints
-              // them white like the desktop application.
               tool = XppStrokeTool.ERASER;
-              break;
+
+              /// TODO: implement whiteout eraser
+              return;
             case "highlighter":
               tool = XppStrokeTool.HIGHLIGHTER;
               break;
@@ -346,6 +346,20 @@ class XppFile {
 
     XppFile file =
         XppFile(title: title, previewImage: previewImage, pages: pages);
+
+    /*/// starting async task to save recent files list
+    SharedPreferences.getInstance().then((prefs) {
+      String jsonData = prefs.getString(PreferencesKeys.kRecentFiles) ?? '[]';
+      Set files = (jsonDecode(jsonData) as Iterable).toSet();
+      if (files.where((element) => element['path'] == rawFile.path).length < 1)
+        files.add({
+          'preview': base64Encode(file.previewImage),
+          'name': file.title,
+          'path': rawFile.path
+        });
+      jsonData = jsonEncode(files.toList());
+      prefs.setString(PreferencesKeys.kRecentFiles, jsonData);
+    });*/
 
     return file;
   }
