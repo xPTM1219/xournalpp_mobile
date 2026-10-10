@@ -8,21 +8,6 @@ import 'package:xournalpp/pages/OpenPage.dart';
 import 'generated/l10n.dart';
 
 void main() {
-  /*
-  /// STEP 1. Create catcher configuration.
-  /// Debug configuration with dialog report mode and console handler. It will show dialog and once user accepts it, error will be shown   /// in console.
-  CatcherOptions debugOptions = CatcherOptions(DialogReportMode(), [
-    ConsoleHandler(),
-  ]);
-
-  /// Release configuration. Same as above, but once user accepts dialog, user will be prompted to send email with crash to support.
-  CatcherOptions releaseOptions = CatcherOptions(DialogReportMode(), [
-    EmailManualHandler(["the-one@with-the-braid.cf"])
-  ]);
-
-  /// STEP 2. Pass your root widget (MyApp) along with Catcher configuration:
-  Catcher(XournalppMobile(),
-      debugConfig: debugOptions, releaseConfig: releaseOptions);*/
   runApp(XournalppMobile());
 }
 
